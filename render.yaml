@@ -4,6 +4,9 @@ services:
   - type: web
     name: paco
     runtime: python
+    plan: free
+    region: oregon
+    branch: master
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -14,6 +17,6 @@ services:
       - key: SENDGRID_API_KEY
         sync: false
       - key: FROM_EMAIL
-        sync: false
+        value: jhlandscaping002@gmail.com
       - key: FROM_NAME
-        sync: false
+        value: Hernandez Landscaping
