@@ -7,6 +7,9 @@ from pathlib import Path
 
 DATABASE_PATH = Path(__file__).parent.parent / "data" / "jardin.db"
 
+# Ensure data directory exists
+DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
 
 def get_connection():
     """Get a database connection with row factory."""
