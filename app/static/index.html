@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Paco</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Paco">
+    <meta name="theme-color" content="#B45309">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+
+    <style>
+        :root {
+            --primary: #B45309;
+            --primary-light: #D97706;
+            --primary-dark: #92400E;
+            --bg: #FDF6E3;
+            --surface: #FFFBEB;
+            --card: #FFFFFF;
+            --text: #3D3D3D;
+            --text-light: #78716C;
+            --border: #FDE68A;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #DC2626;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-top: env(safe-area-inset-top, 0px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 17px;
+            line-height: 1.4;
+        }
+
+        /* App Shell */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding-top: var(--safe-top);
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        /* Main Content Area */
+        .content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-view.active {
+            display: flex;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            padding-bottom: var(--safe-bottom);
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 4px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 3px;
+        }
+
+        /* Thinking indicator */
+        .thinking {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 18px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .thinking-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Paco Avatar - construction worker emoji */
+        .paco-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #FEF3C7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .paco-avatar::before {
+            content: '\1F477\1F3FD';
+        }
+
+        .msg-with-avatar {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            max-width: 90%;
+        }
+
+        .msg-with-avatar .msg {
+            max-width: none;
+        }
+
+        /* Chat View */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 17px;
+            line-height: 1.4;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg.bot {
+            align-self: flex-start;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .client-msg-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: #ECFDF5;
+            border-left: 3px solid var(--success);
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .client-msg-label {
+            font-weight: 600;
+            color: #065F46;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        /* Input Area */
+        .input-bar {
+            display: flex;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .voice-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #DC2626, #B91C1C);
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .voice-btn.recording {
+            background: linear-gradient(135deg, #16A34A, #15803D);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #E7E5E4;
+            border-radius: 24px;
+            font-size: 18px;
+            outline: none;
+            background: var(--card);
+            min-width: 0;
+        }
+
+        .text-input:focus {
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* List Views */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .list-header h2 {
+            font-size: 20px;
+            color: var(--primary);
+        }
+
+        .list-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .card-sub {
+            font-size: 15px;
+            color: var(--text-light);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-done {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        /* Price Row */
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .price-name {
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .price-uses {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .price-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-light);
+            font-size: 16px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .modal h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-field {
+            margin-bottom: 16px;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-light);
+        }
+
+        .form-field input, .form-field textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <div class="header">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="paco-avatar" style="width:44px;height:44px;"></div>
+                    <div>
+                        <h1>Paco</h1>
+                        <div class="header-subtitle">Hernandez Landscaping</div>
+                    </div>
+                </div>
+                <button id="logout-btn" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;">Salir</button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Chat Tab -->
+            <div id="v-chat" class="tab-view active">
+                <div class="chat-container">
+                    <!-- Chat Session Header -->
+                    <div id="chat-session-header" style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+                        <button onclick="showChatList()" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:14px;display:flex;align-items:center;gap:4px;">
+                            <span style="font-size:18px;">&#8801;</span> Chats
+                        </button>
+                        <span id="chat-session-title" style="font-weight:600;font-size:14px;color:var(--text);max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Nueva conversacion</span>
+                        <button onclick="startNewChat()" style="background:var(--primary);border:none;color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">+ Nuevo</button>
+                    </div>
+                    <!-- Chat List (hidden by default) -->
+                    <div id="chat-list-overlay" class="hidden" style="position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:10;display:flex;flex-direction:column;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--surface);border-bottom:1px solid var(--border);">
+                            <h2 style="font-size:18px;color:var(--primary);">Conversaciones</h2>
+                            <button onclick="hideChatList()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-light);">&times;</button>
+                        </div>
+                        <div id="chat-sessions-list" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
+                            <div class="empty">Cargando...</div>
+                        </div>
+                    </div>
+                    <div id="messages" class="messages">
+                        <div class="msg-with-avatar">
+                            <div class="paco-avatar"></div>
+                            <div class="msg bot">Hola Jaime! Soy Paco. En que te puedo ayudar?</div>
+                        </div>
+                    </div>
+                    <div class="input-bar">
+                        <button id="mic" class="voice-btn">VOZ</button>
+                        <input type="text" id="input" class="text-input" placeholder="Escribe aqui...">
+                        <button id="send" class="send-btn">OK</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clients Tab -->
+            <div id="v-clients" class="tab-view">
+                <div class="list-header">
+                    <h2>Clientes</h2>
+                    <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo</button>
+                </div>
+                <div id="clients-list" class="list-content">
+                    <div class="empty">Cargando...</div>
+                </div>
+            </div>
+
+            <!-- Proposals/Invoices Tab -->
+            <div id="v-proposals" class="tab-view">
+                <div class="list-header">
+                    <h2 id="docs-title">Propuestas</h2>
+                    <button class="btn btn-primary btn-sm" id="docs-add-btn" onclick="openProposalModal()">+ Nueva</button>
+                </div>
+                <!-- Toggle between Proposals and Invoices -->
+                <div style="display:flex;padding:0 16px;gap:8px;margin-bottom:-8px;">
+                    <button id="tab-proposals" onclick="showDocsTab('proposals')" style="flex:1;padding:10px;border:none;background:var(--primary);color:white;border-radius:8px 8px 0 0;font-weight:600;cursor:pointer;">Propuestas</button>
+                    <button id="tab-invoices" onclick="showDocsTab('invoices')" style="flex:1;padding:10px;border:none;background:var(--border);color:var(--text);border-radius:8px 8px 0 0;font-weight:600;cursor:pointer;">Facturas</button>
+                </div>
+                <button id="docs-add-invoice-btn" onclick="openInvoiceModal()" class="btn btn-primary btn-sm" style="display:none;margin:8px 16px 0;">+ Nueva Factura</button>
+                <div id="proposals-list" class="list-content">
+                    <div class="empty">Cargando...</div>
+                </div>
+                <div id="invoices-list" class="list-content" style="display:none;">
+                    <div class="empty">Cargando...</div>
+                </div>
+            </div>
+
+            <!-- Messages Tab -->
+            <div id="v-messages" class="tab-view">
+                <!-- Client List View -->
+                <div id="msg-clients-view">
+                    <div class="list-header">
+                        <h2>Mensajes</h2>
+                    </div>
+                    <div id="msg-clients-list" class="list-content">
+                        <div class="empty">Cargando...</div>
+                    </div>
+                </div>
+                <!-- Conversation View (hidden by default) -->
+                <div id="msg-conversation-view" style="display:none;flex-direction:column;height:100%;">
+                    <div class="list-header" style="display:flex;align-items:center;gap:12px;">
+                        <button onclick="backToClientsList()" style="background:none;border:none;font-size:20px;cursor:pointer;padding:4px;">&larr;</button>
+                        <h2 id="msg-client-name">Cliente</h2>
+                    </div>
+                    <div id="msg-thread" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
+                    </div>
+                    <div style="padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:10px;">
+                        <input type="text" id="msg-new-text" placeholder="Nuevo mensaje..." style="flex:1;padding:12px 16px;border:1px solid var(--border);border-radius:20px;font-size:16px;">
+                        <button onclick="sendNewMessage()" class="btn btn-primary" style="border-radius:20px;">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prices Tab -->
+            <div id="v-prices" class="tab-view">
+                <div class="list-header">
+                    <h2>Precios</h2>
+                </div>
+                <div id="prices-list" class="list-content">
+                    <div class="empty">Cargando...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="chat">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                <span>Chat</span>
+            </button>
+            <button class="nav-item" data-tab="clients">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                <span>Clientes</span>
+            </button>
+            <button class="nav-item" data-tab="proposals">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                <span>Propuestas</span>
+            </button>
+            <button class="nav-item" data-tab="messages">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                <span>Mensajes</span>
+            </button>
+            <button class="nav-item" data-tab="prices">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                <span>Precios</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Client Modal -->
+    <div id="modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>Nuevo Cliente</h3>
+            <form id="client-form">
+                <div class="form-field">
+                    <label>Nombre</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-field">
+                    <label>Telefono</label>
+                    <input type="tel" name="phone">
+                </div>
+                <div class="form-field">
+                    <label>Direccion</label>
+                    <input type="text" name="address">
+                </div>
+                <div class="form-field">
+                    <label>Notas</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Client Modal -->
+    <div id="edit-client-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>Editar Cliente</h3>
+            <form id="edit-client-form">
+                <input type="hidden" name="id" id="edit-client-id">
+                <div class="form-field">
+                    <label>Nombre</label>
+                    <input type="text" name="name" id="edit-client-name" required>
+                </div>
+                <div class="form-field">
+                    <label>Telefono</label>
+                    <input type="tel" name="phone" id="edit-client-phone">
+                </div>
+                <div class="form-field">
+                    <label>Email</label>
+                    <input type="email" name="email" id="edit-client-email" placeholder="Para enviar propuestas">
+                </div>
+                <div class="form-field">
+                    <label>Direccion</label>
+                    <input type="text" name="address" id="edit-client-address">
+                </div>
+                <div class="form-field">
+                    <label>Notas</label>
+                    <textarea name="notes" id="edit-client-notes" rows="2"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeEditClientModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invoice Modal -->
+    <div id="invoice-modal" class="modal-overlay hidden">
+        <div class="modal" style="max-width:420px;">
+            <h3>Nueva Factura</h3>
+            <form id="invoice-form">
+                <div class="form-field">
+                    <label>Cliente</label>
+                    <select name="client_id" id="invoice-client" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:white;">
+                        <option value="">Seleccionar cliente...</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>Tipo de Factura</label>
+                    <div style="display:flex;gap:8px;margin-bottom:10px;">
+                        <button type="button" id="inv-type-maint" onclick="setInvoiceType('maintenance')" class="btn btn-primary" style="flex:1;">Mantenimiento</button>
+                        <button type="button" id="inv-type-proposal" onclick="setInvoiceType('proposal')" class="btn btn-outline" style="flex:1;">De Propuesta</button>
+                    </div>
+                </div>
+
+                <!-- Maintenance fields -->
+                <div id="inv-maintenance-fields">
+                    <div class="form-field">
+                        <label>Mantenimiento Trimestral</label>
+                        <input type="number" id="inv-maintenance-amount" placeholder="Ej: 450" step="0.01" min="0" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px;">
+                        <small style="color:var(--text-light);font-size:12px;">Monto fijo que cobra cada trimestre</small>
+                    </div>
+                    <div class="form-field">
+                        <label>Extras Pendientes</label>
+                        <div id="inv-extras-list" style="background:var(--surface);border-radius:8px;padding:12px;font-size:14px;color:var(--text-light);">
+                            Selecciona un cliente para ver extras pendientes
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposal fields (hidden by default) -->
+                <div id="inv-proposal-fields" style="display:none;">
+                    <div class="form-field">
+                        <label>Propuesta Aceptada</label>
+                        <select id="inv-proposal-select" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:white;">
+                            <option value="">Selecciona cliente primero...</option>
+                        </select>
+                    </div>
+                    <div id="inv-proposal-details" style="background:var(--surface);border-radius:8px;padding:12px;font-size:14px;display:none;">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeInvoiceModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Factura</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Proposal Modal -->
+    <div id="proposal-modal" class="modal-overlay hidden">
+        <div class="modal" style="max-width:420px;">
+            <h3>Nueva Propuesta</h3>
+            <form id="proposal-form">
+                <div class="form-field">
+                    <label>Cliente</label>
+                    <select name="client_id" id="proposal-client" required style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:white;">
+                        <option value="">Seleccionar cliente...</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>Servicios</label>
+                    <div id="services-list" style="display:flex;flex-direction:column;gap:10px;">
+                        <div class="service-row" style="display:flex;gap:8px;">
+                            <input type="text" placeholder="Servicio (ej: Podar arbol)" style="flex:2;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;">
+                            <input type="number" placeholder="$" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;text-align:right;" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addServiceRow()" style="margin-top:10px;background:none;border:1px dashed var(--border);padding:10px;border-radius:8px;width:100%;color:var(--text-light);cursor:pointer;font-size:14px;">+ Agregar otro servicio</button>
+                </div>
+
+                <div class="form-field">
+                    <label>Notas (opcional)</label>
+                    <textarea name="notes" rows="2" placeholder="Incluye limpieza, materiales, etc."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeProposalModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Propuesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js');
+        }
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/';
+        });
+
+        // Elements
+        const mic = document.getElementById('mic');
+        const input = document.getElementById('input');
+        const send = document.getElementById('send');
+        const messages = document.getElementById('messages');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        // State
+        let recording = false;
+        let recorder = null;
+        let chunks = [];
+        let currentSessionId = null;  // Current chat session
+
+        // Navigation
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const tab = item.dataset.tab;
+                navItems.forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
+                document.querySelectorAll('.tab-view').forEach(v => {
+                    v.classList.toggle('active', v.id === 'v-' + tab);
+                });
+                if (tab === 'clients') loadClients();
+                if (tab === 'proposals') {
+                    if (currentDocsTab === 'invoices') loadInvoices();
+                    else loadProposals();
+                }
+                if (tab === 'messages') loadMessages();
+                if (tab === 'prices') loadPrices();
+            });
+        });
+
+        // Voice
+        mic.addEventListener('click', handleVoice);
+        mic.addEventListener('touchend', e => { e.preventDefault(); handleVoice(); });
+
+        async function handleVoice() {
+            if (recording) {
+                recorder.stop();
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mic.classList.add('recording');
+                mic.textContent = 'PARA';
+                recording = true;
+                chunks = [];
+
+                // Try to use a format Whisper supports well
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
+                                 MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+
+                recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+                recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+                recorder.onstop = async () => {
+                    recording = false;
+                    mic.classList.remove('recording');
+                    mic.textContent = 'VOZ';
+                    stream.getTracks().forEach(t => t.stop());
+
+                    // Show processing state
+                    input.placeholder = 'Transcribiendo...';
+                    input.disabled = true;
+
+                    const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+                    const form = new FormData();
+                    // Use correct extension based on mime type
+                    const ext = (recorder.mimeType || '').includes('mp4') ? 'mp4' : 'webm';
+                    form.append('audio', blob, `audio.${ext}`);
+
+                    try {
+                        const res = await fetch('/api/transcribe', { method: 'POST', body: form });
+                        const data = await res.json();
+                        input.disabled = false;
+                        input.placeholder = 'Escribe aqui...';
+
+                        if (data.text) {
+                            input.value = data.text;
+                            input.focus();
+                        } else if (data.error) {
+                            console.error('Transcribe error:', data.error);
+                            alert('Error de transcripcion: ' + data.error);
+                        }
+                    } catch (err) {
+                        input.disabled = false;
+                        input.placeholder = 'Escribe aqui...';
+                        console.error('Transcribe error:', err);
+                        alert('Error enviando audio: ' + err.message);
+                    }
+                };
+
+                recorder.start();
+            } catch (err) {
+                console.error('Mic error:', err);
+                mic.classList.remove('recording');
+                mic.textContent = 'VOZ';
+                recording = false;
+                alert('Error accediendo al microfono: ' + err.message);
+            }
+        }
+
+        // Chat Sessions
+        async function loadChatSessions() {
+            const el = document.getElementById('chat-sessions-list');
+            try {
+                const res = await fetch('/api/chats');
+                const data = await res.json();
+                if (!data.sessions.length) {
+                    el.innerHTML = '<div class="empty">No hay conversaciones anteriores</div>';
+                    return;
+                }
+                el.innerHTML = data.sessions.map(s => {
+                    const preview = s.last_message ? s.last_message.substring(0, 60) + (s.last_message.length > 60 ? '...' : '') : 'Sin mensajes';
+                    const date = new Date(s.updated_at).toLocaleDateString('es', { month: 'short', day: 'numeric' });
+                    const isActive = s.id === currentSessionId;
+                    return `
+                    <div class="card" onclick="switchToChat(${s.id})" style="cursor:pointer;${isActive ? 'border-color:var(--primary);background:#FFFBEB;' : ''}">
+                        <div class="card-top">
+                            <div style="flex:1;">
+                                <div class="card-title" style="font-size:15px;">${esc(s.title)}</div>
+                                <div class="card-sub" style="font-size:13px;margin-top:4px;">${esc(preview)}</div>
+                            </div>
+                            <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                                <span style="font-size:12px;color:var(--text-light);">${date}</span>
+                                <button onclick="event.stopPropagation();deleteChat(${s.id})" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:12px;">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="empty">Error cargando chats</div>';
+            }
+        }
+
+        function showChatList() {
+            loadChatSessions();
+            document.getElementById('chat-list-overlay').classList.remove('hidden');
+            document.getElementById('chat-list-overlay').style.display = 'flex';
+        }
+
+        function hideChatList() {
+            document.getElementById('chat-list-overlay').classList.add('hidden');
+            document.getElementById('chat-list-overlay').style.display = 'none';
+        }
+
+        async function startNewChat() {
+            try {
+                const res = await fetch('/api/chats', { method: 'POST' });
+                const data = await res.json();
+                currentSessionId = data.session_id;
+                document.getElementById('chat-session-title').textContent = 'Nueva conversacion';
+                messages.innerHTML = `
+                    <div class="msg-with-avatar">
+                        <div class="paco-avatar"></div>
+                        <div class="msg bot">Hola Jaime! Soy Paco. En que te puedo ayudar?</div>
+                    </div>
+                `;
+                hideChatList();
+            } catch (e) {
+                alert('Error creando chat: ' + e.message);
+            }
+        }
+
+        async function switchToChat(sessionId) {
+            try {
+                const res = await fetch('/api/chats/' + sessionId);
+                const data = await res.json();
+                currentSessionId = sessionId;
+                document.getElementById('chat-session-title').textContent = data.session.title;
+
+                // Load messages for this session
+                messages.innerHTML = '';
+                if (data.messages.length === 0) {
+                    messages.innerHTML = `
+                        <div class="msg-with-avatar">
+                            <div class="paco-avatar"></div>
+                            <div class="msg bot">Hola Jaime! Soy Paco. En que te puedo ayudar?</div>
+                        </div>
+                    `;
+                } else {
+                    data.messages.forEach(m => {
+                        addMsg(m.content, m.role === 'jaime' ? 'user' : 'bot');
+                    });
+                }
+                hideChatList();
+            } catch (e) {
+                alert('Error cargando chat: ' + e.message);
+            }
+        }
+
+        async function deleteChat(sessionId) {
+            if (!confirm('Eliminar esta conversacion?')) return;
+            try {
+                const res = await fetch('/api/chats/' + sessionId, { method: 'DELETE' });
+                if (res.ok) {
+                    // If we deleted the current chat, start a new one
+                    if (sessionId === currentSessionId) {
+                        await startNewChat();
+                    }
+                    loadChatSessions();
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // Send
+        send.addEventListener('click', sendMsg);
+        input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMsg(); });
+
+        async function sendMsg() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMsg(text, 'user');
+            input.value = '';
+
+            // Show thinking indicator
+            const thinking = document.createElement('div');
+            thinking.className = 'msg-with-avatar';
+            thinking.innerHTML = `
+                <div class="paco-avatar"></div>
+                <div class="thinking"><div class="thinking-dots"><span></span><span></span><span></span></div></div>
+            `;
+            messages.appendChild(thinking);
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, session_id: currentSessionId })
+                });
+                const data = await res.json();
+                thinking.remove();
+
+                // Update current session if returned
+                if (data.session_id && !currentSessionId) {
+                    currentSessionId = data.session_id;
+                }
+
+                let html = esc(data.response);
+
+                // Show client messages
+                if (data.client_messages?.length > 0) {
+                    data.client_messages.forEach(cm => {
+                        html += `<div class="client-msg-box"><div class="client-msg-label">Para ${esc(cm.client_name)}:</div>${esc(cm.message)}</div>`;
+                    });
+                }
+
+                // Show proposals created
+                if (data.proposals?.length > 0) {
+                    data.proposals.forEach(p => {
+                        if (p.proposal_id) {
+                            html += `<div style="margin-top:12px;padding:12px;background:#ECFDF5;border-radius:10px;border-left:3px solid var(--success);">
+                                <div style="font-weight:600;color:#065F46;margin-bottom:6px;">Propuesta creada para ${esc(p.client_name)}</div>
+                                <div style="font-size:14px;margin-bottom:8px;">Total: $${p.total.toFixed(2)}</div>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn btn-outline btn-sm" onclick="window.open('/api/proposals/${p.proposal_id}/pdf')">Ver PDF</button>
+                                    <button class="btn btn-success btn-sm" onclick="sendProposal(${p.proposal_id})">Enviar al cliente</button>
+                                </div>
+                            </div>`;
+                        }
+                    });
+                }
+
+                addMsg(html, 'bot', true);
+            } catch (err) {
+                thinking.remove();
+                addMsg('Error: ' + err.message, 'bot');
+            }
+        }
+
+        function addMsg(text, type, isHtml = false) {
+            if (type === 'bot') {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'msg-with-avatar';
+                wrapper.innerHTML = `
+                    <div class="paco-avatar"></div>
+                    <div class="msg bot"></div>
+                `;
+                const msgDiv = wrapper.querySelector('.msg');
+                if (isHtml) msgDiv.innerHTML = text;
+                else msgDiv.textContent = text;
+                messages.appendChild(wrapper);
+            } else {
+                const div = document.createElement('div');
+                div.className = 'msg user';
+                div.textContent = text;
+                messages.appendChild(div);
+            }
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Load functions
+        // Store clients data for editing
+        let clientsData = [];
+
+        async function loadClients() {
+            const el = document.getElementById('clients-list');
+            try {
+                const res = await fetch('/api/clients');
+                const data = await res.json();
+                clientsData = data.clients;
+                if (!data.clients.length) {
+                    el.innerHTML = '<div class="empty">No hay clientes</div>';
+                    return;
+                }
+                el.innerHTML = data.clients.map(c => `
+                    <div class="card">
+                        <div class="card-top">
+                            <div>
+                                <div class="card-title">${esc(c.name)}</div>
+                                <div class="card-sub">${c.phone || ''} ${c.email ? '| ' + esc(c.email) : ''}</div>
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button onclick="editClient(${c.id})" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:14px;">Editar</button>
+                                <button onclick="deleteClient(${c.id},'${esc(c.name)}')" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:14px;">Eliminar</button>
+                            </div>
+                        </div>
+                        ${c.address ? `<div class="card-sub">${esc(c.address)}</div>` : ''}
+                        <div class="card-actions">
+                            <button class="btn btn-primary btn-sm" onclick="newProposal(${c.id},'${esc(c.name)}')">Propuesta</button>
+                            <button class="btn btn-outline btn-sm" onclick="newInvoice(${c.id})">Factura</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="empty">Error</div>';
+            }
+        }
+
+        async function loadProposals() {
+            const el = document.getElementById('proposals-list');
+            try {
+                const res = await fetch('/api/proposals');
+                const data = await res.json();
+                if (!data.proposals.length) {
+                    el.innerHTML = '<div class="empty">No hay propuestas</div>';
+                    return;
+                }
+                el.innerHTML = data.proposals.map(p => {
+                    const statusBadge = {
+                        'draft': 'badge-pending',
+                        'sent': 'badge-done',
+                        'accepted': 'badge-done',
+                        'declined': ''
+                    }[p.status] || 'badge-pending';
+                    const statusText = {
+                        'draft': 'Borrador',
+                        'sent': 'Enviado',
+                        'accepted': 'Aceptado',
+                        'declined': 'Rechazado'
+                    }[p.status] || p.status;
+                    const showSendBtn = p.status === 'draft';
+                    return `
+                    <div class="card">
+                        <div class="card-top">
+                            <div>
+                                <div class="card-title">${esc(p.client_name)}</div>
+                                <div class="card-sub">${p.proposal_number}</div>
+                            </div>
+                            <span class="badge ${statusBadge}">${statusText}</span>
+                        </div>
+                        <div class="card-sub">Total: $${p.total.toFixed(2)}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-outline btn-sm" onclick="window.open('/api/proposals/${p.id}/pdf')">Ver PDF</button>
+                            ${showSendBtn ? `<button class="btn btn-success btn-sm" onclick="sendProposal(${p.id})">Enviar</button>` : ''}
+                            <button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;" onclick="deleteProposal(${p.id})">Eliminar</button>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="empty">Error</div>';
+            }
+        }
+
+        async function sendProposal(id) {
+            if (!confirm('Enviar propuesta por email al cliente?')) return;
+            try {
+                const res = await fetch('/api/proposals/' + id + '/send', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'Propuesta enviada!');
+                    loadProposals();
+                } else {
+                    alert('Error: ' + (data.detail || 'No se pudo enviar'));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function deleteProposal(id) {
+            if (!confirm('Eliminar esta propuesta?')) return;
+            try {
+                const res = await fetch('/api/proposals/' + id, { method: 'DELETE' });
+                if (res.ok) {
+                    loadProposals();
+                } else {
+                    alert('Error eliminando propuesta');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // Invoices
+        let currentDocsTab = 'proposals';
+
+        function showDocsTab(tab) {
+            currentDocsTab = tab;
+            document.getElementById('tab-proposals').style.background = tab === 'proposals' ? 'var(--primary)' : 'var(--border)';
+            document.getElementById('tab-proposals').style.color = tab === 'proposals' ? 'white' : 'var(--text)';
+            document.getElementById('tab-invoices').style.background = tab === 'invoices' ? 'var(--primary)' : 'var(--border)';
+            document.getElementById('tab-invoices').style.color = tab === 'invoices' ? 'white' : 'var(--text)';
+
+            document.getElementById('proposals-list').style.display = tab === 'proposals' ? 'flex' : 'none';
+            document.getElementById('invoices-list').style.display = tab === 'invoices' ? 'flex' : 'none';
+
+            document.getElementById('docs-title').textContent = tab === 'proposals' ? 'Propuestas' : 'Facturas';
+            document.getElementById('docs-add-btn').style.display = tab === 'proposals' ? 'block' : 'none';
+            document.getElementById('docs-add-invoice-btn').style.display = tab === 'invoices' ? 'block' : 'none';
+
+            if (tab === 'invoices') loadInvoices();
+            else loadProposals();
+        }
+
+        async function loadInvoices() {
+            const el = document.getElementById('invoices-list');
+            try {
+                const res = await fetch('/api/invoices');
+                const data = await res.json();
+                if (!data.invoices.length) {
+                    el.innerHTML = '<div class="empty">No hay facturas</div>';
+                    return;
+                }
+                el.innerHTML = data.invoices.map(inv => {
+                    const statusBadge = {
+                        'draft': 'badge-pending',
+                        'sent': 'badge-done',
+                        'paid': 'badge-done'
+                    }[inv.status] || 'badge-pending';
+                    const statusText = {
+                        'draft': 'Borrador',
+                        'sent': 'Enviada',
+                        'paid': 'Pagada'
+                    }[inv.status] || inv.status;
+                    const showSendBtn = inv.status === 'draft';
+                    return `
+                    <div class="card">
+                        <div class="card-top">
+                            <div>
+                                <div class="card-title">${esc(inv.client_name)}</div>
+                                <div class="card-sub">${inv.invoice_number}</div>
+                            </div>
+                            <span class="badge ${statusBadge}">${statusText}</span>
+                        </div>
+                        <div class="card-sub">Total: $${inv.total?.toFixed(2) || '0.00'}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-outline btn-sm" onclick="window.open('/api/invoices/${inv.invoice_number}/pdf')">Ver PDF</button>
+                            ${showSendBtn ? `<button class="btn btn-success btn-sm" onclick="sendInvoice(${inv.id})">Enviar</button>` : ''}
+                            ${inv.status === 'sent' ? `<button class="btn btn-primary btn-sm" onclick="markInvoicePaid(${inv.id})">Marcar pagada</button>` : ''}
+                            <button class="btn btn-sm" style="background:#FEE2E2;color:#DC2626;" onclick="deleteInvoice(${inv.id})">Eliminar</button>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="empty">Error</div>';
+            }
+        }
+
+        async function sendInvoice(id) {
+            if (!confirm('Enviar factura por email al cliente?')) return;
+            try {
+                const res = await fetch('/api/invoices/' + id + '/send', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'Factura enviada!');
+                    loadInvoices();
+                } else {
+                    alert('Error: ' + (data.detail || 'No se pudo enviar'));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function markInvoicePaid(id) {
+            try {
+                const res = await fetch('/api/invoices/' + id + '/paid', { method: 'POST' });
+                if (res.ok) {
+                    loadInvoices();
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function deleteInvoice(id) {
+            if (!confirm('Eliminar esta factura?')) return;
+            try {
+                const res = await fetch('/api/invoices/' + id, { method: 'DELETE' });
+                if (res.ok) {
+                    loadInvoices();
+                } else {
+                    alert('Error eliminando factura');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        let allMessages = [];
+        let currentConvoClientId = null;
+
+        async function loadMessages() {
+            const el = document.getElementById('msg-clients-list');
+            try {
+                const res = await fetch('/api/messages');
+                const data = await res.json();
+                allMessages = data.messages;
+
+                if (!data.messages.length) {
+                    el.innerHTML = '<div class="empty">No hay mensajes</div>';
+                    return;
+                }
+
+                // Group messages by client
+                const clientMap = {};
+                data.messages.forEach(m => {
+                    if (!clientMap[m.client_id]) {
+                        clientMap[m.client_id] = {
+                            id: m.client_id,
+                            name: m.client_name,
+                            messages: [],
+                            pending: 0,
+                            lastMessage: null
+                        };
+                    }
+                    clientMap[m.client_id].messages.push(m);
+                    if (m.status === 'pending') clientMap[m.client_id].pending++;
+                    if (!clientMap[m.client_id].lastMessage) {
+                        clientMap[m.client_id].lastMessage = m;
+                    }
+                });
+
+                const clients = Object.values(clientMap);
+
+                el.innerHTML = clients.map(c => {
+                    const lastMsg = c.lastMessage;
+                    const preview = lastMsg ? lastMsg.content.substring(0, 50) + (lastMsg.content.length > 50 ? '...' : '') : '';
+                    const timeStr = lastMsg?.created_at ? new Date(lastMsg.created_at).toLocaleDateString('es') : '';
+                    const pendingBadge = c.pending > 0 ? `<span class="badge badge-pending">${c.pending}</span>` : '';
+
+                    return `
+                    <div class="card" onclick="openConversation(${c.id}, '${esc(c.name)}')" style="cursor:pointer;">
+                        <div class="card-top">
+                            <div>
+                                <div class="card-title">${esc(c.name)}</div>
+                                <div class="card-sub" style="color:var(--text-light);margin-top:4px;">${esc(preview)}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                ${pendingBadge}
+                                <div class="card-sub" style="margin-top:4px;">${timeStr}</div>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="empty">Error</div>';
+            }
+        }
+
+        function openConversation(clientId, clientName) {
+            currentConvoClientId = clientId;
+            document.getElementById('msg-client-name').textContent = clientName;
+            document.getElementById('msg-clients-view').style.display = 'none';
+            document.getElementById('msg-conversation-view').style.display = 'flex';
+            renderConversation(clientId);
+        }
+
+        function backToClientsList() {
+            currentConvoClientId = null;
+            document.getElementById('msg-clients-view').style.display = 'block';
+            document.getElementById('msg-conversation-view').style.display = 'none';
+            loadMessages(); // Refresh the list
+        }
+
+        function renderConversation(clientId) {
+            const thread = document.getElementById('msg-thread');
+            const clientMsgs = allMessages.filter(m => m.client_id === clientId).reverse(); // oldest first
+
+            if (!clientMsgs.length) {
+                thread.innerHTML = '<div class="empty">No hay mensajes</div>';
+                return;
+            }
+
+            thread.innerHTML = clientMsgs.map(m => {
+                const isOutgoing = m.direction === 'outgoing';
+                const statusIcon = {
+                    'pending': ' (pendiente)',
+                    'sent': ' (enviado)',
+                    'failed': ' (fallido)'
+                }[m.status] || '';
+
+                const time = new Date(m.created_at).toLocaleString('es', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                const bgColor = isOutgoing ? 'var(--primary)' : 'var(--card)';
+                const textColor = isOutgoing ? 'white' : 'var(--text)';
+                const align = isOutgoing ? 'flex-end' : 'flex-start';
+                const borderRadius = isOutgoing ? '18px 18px 4px 18px' : '18px 18px 18px 4px';
+                const border = isOutgoing ? 'none' : '1px solid var(--border)';
+                const failedStyle = m.status === 'failed' ? 'border:2px solid var(--error);' : '';
+
+                return `
+                <div style="display:flex;flex-direction:column;align-items:${align};max-width:85%;">
+                    <div style="padding:12px 16px;background:${bgColor};color:${textColor};border-radius:${borderRadius};border:${border};${failedStyle}">
+                        <div style="white-space:pre-wrap;font-size:16px;">${esc(m.content)}</div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-light);margin-top:4px;padding:0 4px;">
+                        ${m.channel === 'email' ? 'Email' : 'SMS'}${statusIcon} - ${time}
+                    </div>
+                    ${m.status === 'pending' || m.status === 'failed' ? `
+                        <button onclick="sendMessage(${m.id})" class="btn btn-sm btn-success" style="margin-top:6px;padding:6px 12px;font-size:12px;">
+                            ${m.status === 'failed' ? 'Reintentar' : 'Enviar ahora'}
+                        </button>
+                    ` : ''}
+                    ${m.error_message ? `<div style="font-size:11px;color:var(--error);margin-top:2px;">${esc(m.error_message)}</div>` : ''}
+                </div>
+            `}).join('');
+
+            // Scroll to bottom
+            thread.scrollTop = thread.scrollHeight;
+        }
+
+        async function sendMessage(id) {
+            try {
+                const res = await fetch('/api/messages/' + id + '/send', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    // Refresh
+                    const msgRes = await fetch('/api/messages');
+                    const msgData = await msgRes.json();
+                    allMessages = msgData.messages;
+                    if (currentConvoClientId) {
+                        renderConversation(currentConvoClientId);
+                    }
+                } else {
+                    alert('Error: ' + (data.detail || 'No se pudo enviar'));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function sendNewMessage() {
+            const input = document.getElementById('msg-new-text');
+            const text = input.value.trim();
+            if (!text || !currentConvoClientId) return;
+
+            try {
+                // Queue the message
+                const res = await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_id: currentConvoClientId,
+                        content: text,
+                        channel: 'sms'
+                    })
+                });
+                if (res.ok) {
+                    input.value = '';
+                    // Refresh messages
+                    const msgRes = await fetch('/api/messages');
+                    const msgData = await msgRes.json();
+                    allMessages = msgData.messages;
+                    renderConversation(currentConvoClientId);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // Send on Enter key
+        document.getElementById('msg-new-text')?.addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendNewMessage();
+        });
+
+        async function loadPrices() {
+            const el = document.getElementById('prices-list');
+            try {
+                const res = await fetch('/api/prices');
+                const data = await res.json();
+                if (!data.prices.length) {
+                    el.innerHTML = '<div class="empty">Paco aprendera tus precios cuando cotices</div>';
+                    return;
+                }
+                el.innerHTML = data.prices.map(p => `
+                    <div class="price-row">
+                        <div>
+                            <div class="price-name">${esc(p.service_type)}</div>
+                            <div class="price-uses">${p.times_used}x usado</div>
+                        </div>
+                        <div class="price-amount">$${p.default_price.toFixed(2)}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="empty">Error</div>';
+            }
+        }
+
+        // Actions
+        function newProposal(id, name) {
+            // Use the new modal, pre-selecting the client
+            openProposalModal(id);
+        }
+
+        function newInvoice(id) {
+            // Open the invoice modal with client pre-selected
+            openInvoiceModal(id);
+        }
+
+        // Invoice Modal
+        let currentInvoiceType = 'maintenance';
+        let clientExtras = [];
+        let clientProposals = [];
+
+        async function openInvoiceModal(clientId = null) {
+            // Load clients for dropdown
+            const select = document.getElementById('invoice-client');
+            try {
+                const res = await fetch('/api/clients');
+                const data = await res.json();
+                select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+                    data.clients.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+                if (clientId) {
+                    select.value = clientId;
+                    await loadClientInvoiceData(clientId);
+                }
+            } catch (e) {
+                select.innerHTML = '<option value="">Error cargando clientes</option>';
+            }
+
+            // Reset to maintenance type
+            setInvoiceType('maintenance');
+            document.getElementById('inv-maintenance-amount').value = '';
+            document.getElementById('invoice-modal').classList.remove('hidden');
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById('invoice-modal').classList.add('hidden');
+        }
+
+        function setInvoiceType(type) {
+            currentInvoiceType = type;
+            const maintBtn = document.getElementById('inv-type-maint');
+            const propBtn = document.getElementById('inv-type-proposal');
+            const maintFields = document.getElementById('inv-maintenance-fields');
+            const propFields = document.getElementById('inv-proposal-fields');
+
+            if (type === 'maintenance') {
+                maintBtn.className = 'btn btn-primary';
+                propBtn.className = 'btn btn-outline';
+                maintFields.style.display = 'block';
+                propFields.style.display = 'none';
+            } else {
+                maintBtn.className = 'btn btn-outline';
+                propBtn.className = 'btn btn-primary';
+                maintFields.style.display = 'none';
+                propFields.style.display = 'block';
+            }
+        }
+
+        document.getElementById('invoice-client').addEventListener('change', async (e) => {
+            const clientId = e.target.value;
+            if (clientId) {
+                await loadClientInvoiceData(clientId);
+            }
+        });
+
+        async function loadClientInvoiceData(clientId) {
+            // Load extras (uninvoiced services)
+            const extrasEl = document.getElementById('inv-extras-list');
+            try {
+                const res = await fetch('/api/clients/' + clientId + '/services');
+                const data = await res.json();
+                clientExtras = data.services.filter(s => !s.invoiced);
+                if (clientExtras.length > 0) {
+                    extrasEl.innerHTML = clientExtras.map(e =>
+                        `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);">
+                            <span>${esc(e.description)}</span>
+                            <span style="font-weight:600;">$${e.price?.toFixed(2) || '0.00'}</span>
+                        </div>`
+                    ).join('') + `<div style="margin-top:8px;font-weight:600;text-align:right;">Extras: $${clientExtras.reduce((sum, e) => sum + (e.price || 0), 0).toFixed(2)}</div>`;
+                } else {
+                    extrasEl.innerHTML = '<div style="color:var(--text-light);">Sin extras pendientes</div>';
+                }
+            } catch (e) {
+                extrasEl.innerHTML = '<div style="color:var(--error);">Error cargando extras</div>';
+            }
+
+            // Load proposals (sent or accepted)
+            const propSelect = document.getElementById('inv-proposal-select');
+            try {
+                const res = await fetch('/api/clients/' + clientId + '/proposals');
+                const data = await res.json();
+                clientProposals = data.proposals.filter(p => p.status === 'sent' || p.status === 'accepted');
+                if (clientProposals.length > 0) {
+                    propSelect.innerHTML = '<option value="">Seleccionar propuesta...</option>' +
+                        clientProposals.map(p =>
+                            `<option value="${p.id}">${p.proposal_number} - $${p.total?.toFixed(2)} (${p.status === 'accepted' ? 'Aceptada' : 'Enviada'})</option>`
+                        ).join('');
+                } else {
+                    propSelect.innerHTML = '<option value="">No hay propuestas enviadas</option>';
+                }
+            } catch (e) {
+                propSelect.innerHTML = '<option value="">Error cargando propuestas</option>';
+            }
+        }
+
+        document.getElementById('inv-proposal-select').addEventListener('change', (e) => {
+            const propId = e.target.value;
+            const detailsEl = document.getElementById('inv-proposal-details');
+            if (propId) {
+                const prop = clientProposals.find(p => p.id == propId);
+                if (prop) {
+                    detailsEl.style.display = 'block';
+                    detailsEl.innerHTML = `
+                        <div style="font-weight:600;margin-bottom:8px;">Servicios:</div>
+                        ${prop.services.map(s => `<div style="display:flex;justify-content:space-between;padding:2px 0;">
+                            <span>${esc(s.description)}</span>
+                            <span>$${s.price?.toFixed(2)}</span>
+                        </div>`).join('')}
+                        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-weight:600;display:flex;justify-content:space-between;">
+                            <span>Total:</span>
+                            <span>$${prop.total?.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                detailsEl.style.display = 'none';
+            }
+        });
+
+        document.getElementById('invoice-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const clientId = document.getElementById('invoice-client').value;
+            if (!clientId) {
+                alert('Selecciona un cliente');
+                return;
+            }
+
+            let invoiceData = { client_id: parseInt(clientId) };
+
+            if (currentInvoiceType === 'maintenance') {
+                const maintAmount = document.getElementById('inv-maintenance-amount').value;
+                invoiceData.maintenance_amount = maintAmount ? parseFloat(maintAmount) : null;
+            } else {
+                // From proposal
+                const propId = document.getElementById('inv-proposal-select').value;
+                if (!propId) {
+                    alert('Selecciona una propuesta');
+                    return;
+                }
+                invoiceData.proposal_id = parseInt(propId);
+            }
+
+            try {
+                const res = await fetch('/api/invoices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(invoiceData)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    closeInvoiceModal();
+                    showDocsTab('invoices');
+                    loadInvoices();
+                    window.open('/api/invoices/' + data.invoice_number + '/pdf');
+                } else {
+                    alert('Error: ' + (data.detail || 'No se pudo crear factura'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+
+
+        // Client Modal (New)
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        // Client Modal (Edit)
+        function editClient(id) {
+            const client = clientsData.find(c => c.id === id);
+            if (!client) return;
+
+            document.getElementById('edit-client-id').value = client.id;
+            document.getElementById('edit-client-name').value = client.name || '';
+            document.getElementById('edit-client-phone').value = client.phone || '';
+            document.getElementById('edit-client-email').value = client.email || '';
+            document.getElementById('edit-client-address').value = client.address || '';
+            document.getElementById('edit-client-notes').value = client.notes || '';
+
+            document.getElementById('edit-client-modal').classList.remove('hidden');
+        }
+
+        function closeEditClientModal() {
+            document.getElementById('edit-client-modal').classList.add('hidden');
+        }
+
+        async function deleteClient(id, name) {
+            if (!confirm(`Eliminar ${name}? Esto eliminara todas las propuestas, facturas y mensajes de este cliente.`)) return;
+            try {
+                const res = await fetch('/api/clients/' + id, { method: 'DELETE' });
+                if (res.ok) {
+                    loadClients();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + (data.detail || 'No se pudo eliminar'));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        document.getElementById('edit-client-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const id = document.getElementById('edit-client-id').value;
+            const updates = {
+                name: document.getElementById('edit-client-name').value,
+                phone: document.getElementById('edit-client-phone').value || null,
+                email: document.getElementById('edit-client-email').value || null,
+                address: document.getElementById('edit-client-address').value || null,
+                notes: document.getElementById('edit-client-notes').value || null
+            };
+
+            try {
+                const res = await fetch('/api/clients/' + id, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+                if (res.ok) {
+                    closeEditClientModal();
+                    loadClients();
+                } else {
+                    alert('Error guardando cambios');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+
+        document.getElementById('client-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            await fetch('/api/clients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(fd))
+            });
+            closeModal();
+            e.target.reset();
+            loadClients();
+        });
+
+        // Proposal Modal
+        async function openProposalModal(clientId = null) {
+            // Load clients for dropdown
+            const select = document.getElementById('proposal-client');
+            try {
+                const res = await fetch('/api/clients');
+                const data = await res.json();
+                select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+                    data.clients.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+                if (clientId) select.value = clientId;
+            } catch (e) {
+                select.innerHTML = '<option value="">Error cargando clientes</option>';
+            }
+
+            // Reset services to one empty row
+            document.getElementById('services-list').innerHTML = `
+                <div class="service-row" style="display:flex;gap:8px;">
+                    <input type="text" placeholder="Servicio (ej: Podar arbol)" style="flex:2;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;">
+                    <input type="number" placeholder="$" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;text-align:right;" step="0.01" min="0">
+                </div>
+            `;
+
+            document.getElementById('proposal-modal').classList.remove('hidden');
+        }
+
+        function closeProposalModal() {
+            document.getElementById('proposal-modal').classList.add('hidden');
+            document.getElementById('proposal-form').reset();
+        }
+
+        function addServiceRow() {
+            const list = document.getElementById('services-list');
+            const row = document.createElement('div');
+            row.className = 'service-row';
+            row.style.cssText = 'display:flex;gap:8px;';
+            row.innerHTML = `
+                <input type="text" placeholder="Servicio" style="flex:2;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;">
+                <input type="number" placeholder="$" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:15px;text-align:right;" step="0.01" min="0">
+                <button type="button" onclick="this.parentElement.remove()" style="padding:10px;border:none;background:var(--error);color:white;border-radius:8px;cursor:pointer;">X</button>
+            `;
+            list.appendChild(row);
+        }
+
+        document.getElementById('proposal-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const clientId = document.getElementById('proposal-client').value;
+            if (!clientId) {
+                alert('Selecciona un cliente');
+                return;
+            }
+
+            // Get all services
+            const rows = document.querySelectorAll('#services-list .service-row');
+            const services = [];
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const desc = inputs[0].value.trim();
+                const price = parseFloat(inputs[1].value) || 0;
+                if (desc && price > 0) {
+                    services.push({ description: desc, price: price });
+                }
+            });
+
+            if (services.length === 0) {
+                alert('Agrega al menos un servicio con precio');
+                return;
+            }
+
+            const notes = e.target.querySelector('[name="notes"]').value.trim();
+
+            try {
+                const res = await fetch('/api/proposals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_id: parseInt(clientId), services, notes: notes || null })
+                });
+                const data = await res.json();
+                closeProposalModal();
+                loadProposals();
+                // Open the PDF
+                window.open('/api/proposals/' + data.proposal_id + '/pdf');
+            } catch (err) {
+                alert('Error creando propuesta: ' + err.message);
+            }
+        });
+
+        // Util
+        function esc(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        // Init
+        async function init() {
+            try {
+                // Load most recent chat session
+                const chatsRes = await fetch('/api/chats');
+                const chatsData = await chatsRes.json();
+
+                if (chatsData.sessions.length > 0) {
+                    // Load the most recent session
+                    const recentSession = chatsData.sessions[0];
+                    currentSessionId = recentSession.id;
+                    document.getElementById('chat-session-title').textContent = recentSession.title;
+
+                    // Load messages for this session
+                    const res = await fetch('/api/chats/' + currentSessionId);
+                    const data = await res.json();
+
+                    if (data.messages.length) {
+                        messages.innerHTML = '';
+                        data.messages.forEach(m => addMsg(m.content, m.role === 'jaime' ? 'user' : 'bot'));
+                    }
+                }
+            } catch (e) {
+                console.log('Init error:', e);
+            }
+        }
+        init();
+    </script>
+</body>
+</html>

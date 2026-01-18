@@ -1,0 +1,15 @@
+# Environment and secrets
+.env
+venv/
+__pycache__/
+*.pyc
+
+# Data (will be recreated)
+data/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
