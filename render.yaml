@@ -1,8 +1,8 @@
-# FILE: render.yaml | PURPOSE: Render deployment configuration for Jardin/Paco
+# FILE: render.yaml | PURPOSE: Render deployment configuration for Paco
 
 services:
   - type: web
-    name: jardin
+    name: paco
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
