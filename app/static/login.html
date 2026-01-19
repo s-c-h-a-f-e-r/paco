@@ -193,7 +193,12 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    window.location.href = '/';
+                    submitBtn.textContent = '¡Bienvenido!';
+                    submitBtn.style.background = '#27ae60';
+                    setTimeout(() => {
+                        window.location.replace('/');
+                    }, 500);
+                    return;
                 } else {
                     errorEl.textContent = data.detail || 'Error al iniciar sesion';
                     errorEl.classList.add('show');
