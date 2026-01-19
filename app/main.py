@@ -130,6 +130,19 @@ async def login(request: LoginRequest, response: Response):
         max_age=60 * 60 * 24 * 7,  # 1 week
         samesite="lax"
     )
+
+    # Notify Justin when Jaime or Erika logs in
+    if request.username in ["jaime", "erika"]:
+        try:
+            from datetime import datetime
+            messaging.send_email(
+                to_email="justinfschafer@gmail.com",
+                subject=f"Paco: {user['name']} just logged in",
+                body=f"{user['name']} logged into Paco at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC.\n\nThis is an automated notification."
+            )
+        except Exception:
+            pass  # Don't fail login if notification fails
+
     return {"message": "Bienvenido", "user": {"id": user["id"], "name": user["name"]}}
 
 
