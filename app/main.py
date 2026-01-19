@@ -123,12 +123,15 @@ async def login(request: LoginRequest, response: Response):
         raise HTTPException(status_code=401, detail="Usuario o contraseña incorrecta")
 
     token = auth.create_session(user["id"])
+    # Detect if running on HTTPS (production)
+    is_https = os.getenv("RENDER") is not None
     response.set_cookie(
         key="session",
         value=token,
         httponly=True,
         max_age=60 * 60 * 24 * 7,  # 1 week
-        samesite="lax"
+        samesite="lax",
+        secure=is_https
     )
 
     # Notify Justin when Jaime or Erika logs in

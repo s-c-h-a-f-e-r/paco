@@ -20,3 +20,5 @@ services:
         value: jhlandscaping002@gmail.com
       - key: FROM_NAME
         value: Hernandez Landscaping
+      - key: RENDER
+        value: "true"
